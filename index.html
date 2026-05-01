@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>UptimeLite</title>
+</head>
+<body>
+  <h1>UptimeLite Dashboard</h1>
+
+  <input id="url" placeholder="https://example.com">
+  <button onclick="addSite()">Add Site</button>
+
+  <ul id="sites"></ul>
+
+  <script>
+    const API = 'http://localhost:3000';
+
+    async function loadSites() {
+      const res = await fetch(API + '/sites');
+      const sites = await res.json();
+
+      const list = document.getElementById('sites');
+      list.innerHTML = '';
+
+      for (let site of sites) {
+        const checksRes = await fetch(API + '/checks/' + site.id);
+        const checks = await checksRes.json();
+        const last = checks[0];
+
+        const status = last && last.status === 200
+          ? '🟢 Online'
+          : '🔴 Offline';
+
+        const li = document.createElement('li');
+        li.innerText = site.url + ' - ' + status;
+        list.appendChild(li);
+      }
+    }
+
+    async function addSite() {
+      const url = document.getElementById('url').value;
+
+      await fetch(API + '/sites', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url })
+      });
+
+      loadSites();
+    }
+
+    loadSites();
+  </script>
+</body>
+</html>
